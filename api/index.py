@@ -2,12 +2,10 @@ import json
 import os
 import requests
 import traceback
-import sys
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 LARK_APP_ID = os.environ.get("LARK_APP_ID")
 LARK_APP_SECRET = os.environ.get("LARK_APP_SECRET")
-
 
 def get_tenant_access_token():
     resp = requests.post(
@@ -15,7 +13,6 @@ def get_tenant_access_token():
         json={"app_id": LARK_APP_ID, "app_secret": LARK_APP_SECRET},
     )
     return resp.json()["tenant_access_token"]
-
 
 def send_message_to_lark(chat_id, text):
     token = get_tenant_access_token()
@@ -33,19 +30,10 @@ def send_message_to_lark(chat_id, text):
         json=payload,
     )
 
-
 def handler(event, context):
     try:
-        # Toujours renvoyer du JSON, même si le body est illisible
-        if "body" not in event:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "missing body"}),
-            }
-
         body = json.loads(event["body"])
 
-        # Challenge Lark
         if "challenge" in body:
             return {
                 "statusCode": 200,
@@ -76,7 +64,6 @@ def handler(event, context):
         return {"statusCode": 200, "body": json.dumps({"status": "ok"})}
 
     except Exception as e:
-        # En cas d'erreur, on log dans Vercel et on renvoie un JSON propre
         traceback.print_exc()
         return {
             "statusCode": 500,
