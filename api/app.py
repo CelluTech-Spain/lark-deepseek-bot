@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import json
 import os
 import requests
+import traceback
 
 app = Flask(__name__)
 
@@ -37,15 +38,15 @@ def send_message_to_lark(chat_id, text):
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.json
+    try:
+        data = request.json
 
-    # Challenge de vérification Lark
-    if "challenge" in data:
-        return jsonify({"challenge": data["challenge"]})
+        # Challenge de vérification Lark
+        if "challenge" in data:
+            return jsonify({"challenge": data["challenge"]})
 
-    event = data.get("event", {})
-    if event.get("type") == "im.message.receive_v1":
-        try:
+        event = data.get("event", {})
+        if event.get("type") == "im.message.receive_v1":
             msg_content = json.loads(event["message"]["content"])
             user_question = msg_content.get("text", "")
             chat_id = event["message"]["chat_id"]
@@ -64,7 +65,15 @@ def webhook():
             )
             answer = deepseek_resp.json()["choices"][0]["message"]["content"]
             send_message_to_lark(chat_id, answer)
-        except Exception as e:
-            print(f"Erreur : {e}")
 
-    return jsonify({"status": "ok"})
+        return jsonify({"status": "ok"})
+
+    except Exception as e:
+        # En cas d'erreur, on renvoie un JSON avec le message
+        return jsonify({"error": str(e), "traceback": traceback.format_exc()}), 500
+
+
+# Route de test GET (facultative)
+@app.route("/webhook", methods=["GET"])
+def webhook_get():
+    return jsonify({"message": "Webhook is running. Send a POST request."})
