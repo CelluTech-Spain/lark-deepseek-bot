@@ -33,13 +33,14 @@ def send_message_to_lark(chat_id, text):
         json=payload,
     )
 
-@app.route("/webhook", methods=["POST"])
+@app.route("/", methods=["POST"])
 def webhook():
     try:
         if not request.is_json:
             return jsonify({"error": "Request must be JSON"}), 400
         data = request.get_json(force=True)
 
+        # Challenge de vérification Lark
         if "challenge" in data:
             return jsonify({"challenge": data["challenge"]})
 
@@ -70,6 +71,6 @@ def webhook():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-@app.route("/webhook", methods=["GET"])
-def webhook_get():
-    return jsonify({"message": "Webhook is running"})
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"message": "Bot is running"})
