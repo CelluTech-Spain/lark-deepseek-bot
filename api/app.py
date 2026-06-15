@@ -33,14 +33,16 @@ def send_message_to_lark(chat_id, text):
         json=payload,
     )
 
+# Route attrape‑tout : capture tous les chemins après /api/app
 @app.route("/", methods=["POST"])
-def webhook():
+@app.route("/<path:subpath>", methods=["POST"])
+def webhook(subpath=""):
     try:
         if not request.is_json:
             return jsonify({"error": "Request must be JSON"}), 400
         data = request.get_json(force=True)
 
-        # Challenge de vérification Lark
+        # Challenge Lark
         if "challenge" in data:
             return jsonify({"challenge": data["challenge"]})
 
@@ -66,11 +68,11 @@ def webhook():
             send_message_to_lark(chat_id, answer)
 
         return jsonify({"status": "ok"})
-
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @app.route("/", methods=["GET"])
-def index():
-    return jsonify({"message": "Bot is running"})
+@app.route("/<path:subpath>", methods=["GET"])
+def index(subpath=""):
+    return jsonify({"message": "Bot is running", "path": f"/{subpath}"})
